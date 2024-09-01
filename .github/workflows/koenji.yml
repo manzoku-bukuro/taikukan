@@ -1,0 +1,45 @@
+name: Compare Sheets and Notify
+
+on:
+  schedule:
+    # 7時から23時59分までの1時間に1回実行
+    - cron: '0 7-23 * * *'
+  workflow_dispatch:  # 手動トリガーを追加
+
+jobs:
+  compare-and-notify:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium requests
+
+    - name: Run compare_sheets_koenji script
+      id: compare-sheets
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      run: |
+        python compare_sheets_koenji.py
+
+    - name: Check for changes
+      id: check-changes
+      run: echo "changes=${{ env.CHANGES }}" >> $GITHUB_ENV
+
+    - name: Commit changes if any
+      if: env.changes == 'true'
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add sheet_koenji1.txt sheet_koenji2.txt
+        git commit -m "Update sheets with new changes"
+        git push
