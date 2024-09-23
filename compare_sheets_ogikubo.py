@@ -97,11 +97,11 @@ def extract_changes(file1, file2):
             if line1 != line2 and line2 in ["1", "2", "3", "4"]:
                 time_slot = time_slots[j]
                 if time_slot in ["17-19", "19-21"]:
-                    time_slot = f"**{time_slot}**"
+                    time_slot = f"*{time_slot}*"
                 if current_day in holidays:
-                    current_day = f"**{current_day}**"
+                    current_day = f"*{current_day}*"
                 if current_date in spesial_holidays:
-                    current_date = f"**{current_date}**"
+                    current_date = f"*{current_date}*"
                 changes.append(f"{current_date} ({current_day}) {time_slot}")
 
     return changes
