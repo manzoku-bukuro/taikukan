@@ -102,7 +102,7 @@ def extract_changes(file1, file2):
                     current_day = f"*{current_day}*"
                 if current_date in spesial_holidays:
                     current_date = f"*{current_date}*"
-                changes.append(f"{current_date} ({current_day}) {time_slot}")
+                changes.append(f"{current_date} {current_day} {time_slot}")
 
     return changes
 
