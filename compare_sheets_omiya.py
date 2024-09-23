@@ -94,7 +94,7 @@ def extract_changes(file1, file2):
 
             if line1 != line2 and line2 in ["1", "2", "3", "4"]:
                 time_slot = time_slots[j]
-                if time_slot in ["17-19", "19-21"]:
+                if time_slot in ["19-21"]:
                     time_slot = f"**{time_slot}**"
                 changes.append(f"{current_date} ({current_day}) {time_slot}")
 
