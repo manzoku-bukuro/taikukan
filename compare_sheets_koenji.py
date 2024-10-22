@@ -124,7 +124,7 @@ def main():
             print(head_info.text)
             # selectorのidを持つ要素
             selector_id_text = driver.find_element(By.CSS_SELECTOR, selector).text
-            print(selector_id_text)
+            print(selector, ': selector:',selector_id_text)
             click_element(driver, selector)
             # 1秒待機
             driver.implicitly_wait(1)
