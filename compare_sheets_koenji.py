@@ -68,7 +68,12 @@ def fetch_and_write_data(driver, file_path):
     for _ in range(5):  # 5週間分のデータを取得
         for day in range(1, 8):  # 各週の7日分のデータを取得
             day_id = f"DAY{day}"
+            print('day_id:',day_id)
             day_element = driver.find_element(By.ID, day_id)
+            # 存在チェック
+            if not day_element:
+                print('day_element is not found')
+                continue
             date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
             print('--------',date_text)
             time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
