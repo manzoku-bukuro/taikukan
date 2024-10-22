@@ -123,15 +123,12 @@ def main():
         driver.switch_to.frame(iframe)
         
         # 必要な要素をクリック
-        selectors = ["#BB1", "#BB0", "#T7", "#T3","#T3", "#T1", "#T4"]
+        selectors = ["jump(1);", "jump(1);", "prpSelAuthEmpty('17');", "prpSelAuthEmpty('1703')","rgnSel('03')", "facSel('1010103')", "objSel('101010322049')"]
         for selector in selectors:
-            time.sleep(3)
-            head_info =  driver.find_element(By.CLASS_NAME, "HEADINFO")
-            print(head_info.text)
-            # selectorのidを持つ要素
-            selector_id_text = driver.find_element(By.CSS_SELECTOR, selector).text
-            print(selector, ': selector:',selector_id_text)
-            click_element(driver, selector)
+            time.sleep(1)
+            print('selector:',selector)
+            driver.execute_script(selector)
+
     
         
         # シート2の内容をシート1にコピー
