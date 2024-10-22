@@ -122,6 +122,8 @@ def main():
         if not iframe:
             print("iframe not found.")
             return
+        else:
+            print("iframe found.")
         driver.switch_to.frame(iframe)
         
         # 必要な要素をクリック
