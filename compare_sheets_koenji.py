@@ -68,6 +68,7 @@ def fetch_and_write_data(driver, file_path):
             day_id = f"DAY{day}"
             day_element = driver.find_element(By.ID, day_id)
             date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
+            print("Date:", date_text)
             time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
             slots = [slot.text if slot.text else slot.find_element(By.TAG_NAME, "img").get_attribute("alt") for slot in time_slots]
             all_data.append([date_text] + slots)
