@@ -63,12 +63,14 @@ def write_data_to_sheet(file_path, data):
 
 # データを取得してシートに書き込む関数
 def fetch_and_write_data(driver, file_path):
+    print("fetch_and_write_data")
     all_data = []
     for _ in range(5):  # 5週間分のデータを取得
         for day in range(1, 8):  # 各週の7日分のデータを取得
             day_id = f"DAY{day}"
             day_element = driver.find_element(By.ID, day_id)
             date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
+            print('--------',date_text)
             time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
             slots = [slot.text if slot.text else slot.find_element(By.TAG_NAME, "img").get_attribute("alt") for slot in time_slots]
             all_data.append([date_text] + slots)
