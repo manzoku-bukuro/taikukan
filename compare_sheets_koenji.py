@@ -118,7 +118,7 @@ def main():
         driver.switch_to.frame(iframe)
         
         # 必要な要素をクリック
-        selectors = ["#BB1","#BB1", "#BB1", "#T3", "#T7", "#T3", "#T1", "#T4"]
+        selectors = ["#BB1", "#BB0", "#T7", "#T3","#T3", "#T1", "#T4"]
         for selector in selectors:
             head_info =  driver.find_element(By.CLASS_NAME, "HEADINFO")
             print(head_info.text)
