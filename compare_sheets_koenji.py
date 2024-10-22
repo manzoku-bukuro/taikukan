@@ -70,10 +70,7 @@ def fetch_and_write_data(driver, file_path):
             day_id = f"DAY{day}"
             print('day_id:',day_id)
             day_element = driver.find_element(By.ID, day_id)
-            # 存在チェック
-            if not day_element:
-                print('day_element is not found')
-                continue
+            print('day_element:',day_element)
             date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
             print('--------',date_text)
             time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
