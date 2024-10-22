@@ -65,8 +65,6 @@ def fetch_and_write_data(driver, file_path):
     all_data = []
     for _ in range(5):  # 5週間分のデータを取得
         for day in range(1, 8):  # 各週の7日分のデータを取得
-            YMD = driver.find_element(By.ID, "YMD")
-            print(YMD.text)
             day_id = f"DAY{day}"
             day_element = driver.find_element(By.ID, day_id)
             date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
@@ -118,17 +116,13 @@ def main():
         iframe = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "iframe[src='https://www.yoyaku-sports.city.suginami.tokyo.jp/reselve/k_index.do']"))
         )
-        # iframeがあるかどうかを確認
-        if not iframe:
-            print("iframe not found.")
-            return
-        else:
-            print("iframe found.")
         driver.switch_to.frame(iframe)
         
         # 必要な要素をクリック
         selectors = ["#BB1", "#BB1", "#T3", "#T7", "#T3", "#T1", "#T4"]
         for selector in selectors:
+            head_info =  driver.find_element(By.CLASS_NAME, "HEADINFO")
+            print(head_info.text)
             click_element(driver, selector)
     
         
