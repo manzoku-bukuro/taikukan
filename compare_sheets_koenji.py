@@ -66,11 +66,16 @@ def fetch_and_write_data(driver, file_path):
     for _ in range(5):  # 5週間分のデータを取得
         for day in range(1, 8):  # 各週の7日分のデータを取得
             day_id = f"DAY{day}"
-            day_element = driver.find_element(By.ID, day_id)
-            date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
-            time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
-            slots = [slot.text if slot.text else slot.find_element(By.TAG_NAME, "img").get_attribute("alt") for slot in time_slots]
-            all_data.append([date_text] + slots)
+            try:
+                day_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.ID, day_id))
+                )
+                date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
+                time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
+                slots = [slot.text if slot.text else slot.find_element(By.TAG_NAME, "img").get_attribute("alt") for slot in time_slots]
+                all_data.append([date_text] + slots)
+            except Exception as e:
+                print(f"An error occurred while processing {day_id}: {e}")
         next_element = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, "#NEXTWEEK"))
         )
@@ -83,7 +88,7 @@ def extract_changes(file1, file2):
     lines2 = read_file(file2)
     changes = []
     time_slots = ["7-9", "9-11", "11-13", "13-15", "15-17", "17-19", "19-21", "21-23"]
-    holidays = ["(土曜日)","(日曜日)"]
+    holidays = ["(土曜日)", "(日曜日)"]
     spesial_holidays = ["10月14日", "11月4日"]
 
     for i in range(0, len(lines1), 11):  # 11行ごとに処理
@@ -136,7 +141,7 @@ def main():
         # シート1とシート2の違いを表示
         changes = extract_changes('sheet_koenji1.txt', 'sheet_koenji2.txt')
         if changes:
-            message = "高円寺体育館は以下の時間帯で予約可能になりました:\n" + "\n".join(changes)
+            message = "*高円寺体育館は以下の時間帯で予約可能になりました:*\n" + "\n".join(changes)
             send_slack_notification(message)
             print(message)
             # 環境変数を設定して、変更があったことを示す
