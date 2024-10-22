@@ -63,24 +63,30 @@ def write_data_to_sheet(file_path, data):
 
 # データを取得してシートに書き込む関数
 def fetch_and_write_data(driver, file_path):
-    print("fetch_and_write_data")
     all_data = []
     for _ in range(5):  # 5週間分のデータを取得
         for day in range(1, 8):  # 各週の7日分のデータを取得
             day_id = f"DAY{day}"
-            print('day_id:',day_id)
-            day_element = driver.find_element(By.ID, day_id)
-            print('-------------------')
-            print('day_element:',day_element)
-            date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
-            print('--------',date_text)
-            time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
-            slots = [slot.text if slot.text else slot.find_element(By.TAG_NAME, "img").get_attribute("alt") for slot in time_slots]
-            all_data.append([date_text] + slots)
-        next_element = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "#NEXTWEEK"))
-        )
-        next_element.click()
+            print('day_id:', day_id)  # day_idを出力
+            try:
+                day_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.ID, day_id))
+                )
+                date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
+                time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
+                slots = [slot.text if slot.text else slot.find_element(By.TAG_NAME, "img").get_attribute("alt") for slot in time_slots]
+                all_data.append([date_text] + slots)
+            except Exception as e:
+                print(f"An error occurred while processing {day_id}: {e}")
+                continue  # エラーが発生した場合でも次の要素に進む
+        try:
+            next_element = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "#NEXTWEEK"))
+            )
+            next_element.click()
+        except Exception as e:
+            print(f"An error occurred while clicking NEXTWEEK: {e}")
+            break  # エラーが発生した場合はループを終了
     write_data_to_sheet(file_path, all_data)
 
 # 変更箇所を抽出する関数
@@ -126,12 +132,10 @@ def main():
         # 必要な要素をクリック
         selectors = ["#BB1", "#BB0", "#T7", "#T3","#T3", "#T1", "#T4"]
         for selector in selectors:
-            time.sleep(3)
+            time.sleep(2)
             head_info =  driver.find_element(By.CLASS_NAME, "HEADINFO")
-            print(head_info.text)
             # selectorのidを持つ要素
             selector_id_text = driver.find_element(By.CSS_SELECTOR, selector).text
-            print(selector, ': selector:',selector_id_text)
             click_element(driver, selector)
     
         
