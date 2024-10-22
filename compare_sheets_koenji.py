@@ -124,6 +124,8 @@ def main():
             head_info =  driver.find_element(By.CLASS_NAME, "HEADINFO")
             print(head_info.text)
             click_element(driver, selector)
+            # 1秒待機
+            driver.implicitly_wait(1)
     
         
         # シート2の内容をシート1にコピー
