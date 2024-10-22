@@ -70,6 +70,7 @@ def fetch_and_write_data(driver, file_path):
             day_id = f"DAY{day}"
             print('day_id:',day_id)
             day_element = driver.find_element(By.ID, day_id)
+            print('-------------------')
             print('day_element:',day_element)
             date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
             print('--------',date_text)
