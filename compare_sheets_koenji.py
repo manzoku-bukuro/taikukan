@@ -76,10 +76,15 @@ def fetch_and_write_data(driver, file_path):
                 all_data.append([date_text] + slots)
             except Exception as e:
                 print(f"An error occurred while processing {day_id}: {e}")
-        next_element = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "#NEXTWEEK"))
-        )
-        next_element.click()
+                continue  # エラーが発生した場合でも次の要素に進む
+        try:
+            next_element = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "#NEXTWEEK"))
+            )
+            next_element.click()
+        except Exception as e:
+            print(f"An error occurred while clicking NEXTWEEK: {e}")
+            break  # エラーが発生した場合はループを終了
     write_data_to_sheet(file_path, all_data)
 
 # 変更箇所を抽出する関数
