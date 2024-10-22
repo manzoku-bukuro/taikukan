@@ -118,6 +118,10 @@ def main():
         iframe = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "iframe[src='https://www.yoyaku-sports.city.suginami.tokyo.jp/reselve/k_index.do']"))
         )
+        # iframeがあるかどうかを確認
+        if not iframe:
+            print("iframe not found.")
+            return
         driver.switch_to.frame(iframe)
         
         # 必要な要素をクリック
