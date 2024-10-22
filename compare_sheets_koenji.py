@@ -110,7 +110,6 @@ def extract_changes(file1, file2):
 def main():
     try:
         driver.get("https://www.yoyaku-sports.city.suginami.tokyo.jp/w/")
-        print(driver.title)
         
         # iframeに移動
         iframe = WebDriverWait(driver, 10).until(
@@ -122,7 +121,7 @@ def main():
         selectors = ["#BB1", "#BB1", "#T3", "#T7", "#T3", "#T1", "#T4"]
         for selector in selectors:
             head_info =  driver.find_element(By.CLASS_NAME, "HEADINFO")
-            print(head_info.text)
+            print('--------------')
             # selectorのidを持つ要素
             selector_id_text = driver.find_element(By.CSS_SELECTOR, selector).text
             print(selector_id_text)
