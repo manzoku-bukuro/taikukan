@@ -129,7 +129,7 @@ def main():
             print('selector:',selector)
             driver.execute_script(selector)
             # HEADINFOとういclassがあるかどうかを確認
-            head_info = driver.find_elements(By.CLASS_NAME, "HEADINFO").text
+            head_info = driver.find_element(By.CLASS_NAME, "HEADINFO").text
             print('head_info:',head_info)
 
     
