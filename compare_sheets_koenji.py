@@ -63,10 +63,12 @@ def write_data_to_sheet(file_path, data):
 
 # データを取得してシートに書き込む関数
 def fetch_and_write_data(driver, file_path):
+    time.sleep(3)
     head_info = driver.find_element(By.CLASS_NAME, "HEADINFO").text
     print('head_info2:',head_info)
     all_data = []
     for _ in range(5):  # 5週間分のデータを取得
+        time.sleep(3)
         for day in range(1, 8):  # 各週の7日分のデータを取得
             day_id = f"DAY{day}"
             try:
