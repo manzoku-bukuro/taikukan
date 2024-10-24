@@ -109,6 +109,7 @@ def extract_changes(file1, file2):
 
         current_date = lines1[i].strip()
         current_day = lines1[i + 1].strip()
+        print('current_date currentDay',current_date,current_day)
 
         for j in range(8):  # 3行目から10行目までの時間帯を処理
             line1 = lines1[i + 2 + j].strip()
