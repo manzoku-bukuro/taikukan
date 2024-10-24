@@ -158,7 +158,7 @@ def main():
         # シート1とシート2の違いを表示
         changes = extract_changes('sheet_omiya1.txt', 'sheet_omiya2.txt')
         if changes:
-            message = "荻窪体育館は以下の時間帯で予約可能になりました:\n" + "\n".join(changes)
+            message = "大宮体育館は以下の時間帯で予約可能になりました:\n" + "\n".join(changes)
             send_slack_notification(message)
             print(message)
             # 環境変数を設定して、変更があったことを示す
