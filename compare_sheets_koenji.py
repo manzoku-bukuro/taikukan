@@ -162,17 +162,17 @@ def main():
             send_slack_notification(message)
             print(message)
             # 環境変数を設定して、変更があったことを示す
-            # with open(os.getenv('GITHUB_ENV'), 'a') as env_file:
-                # env_file.write(f'CHANGES=true\n')
+            with open(os.getenv('GITHUB_ENV'), 'a') as env_file:
+                env_file.write(f'CHANGES=true\n')
         else:
             print("No changes found.")
-            # with open(os.getenv('GITHUB_ENV'), 'a') as env_file:
-                # env_file.write(f'CHANGES=false\n')
+            with open(os.getenv('GITHUB_ENV'), 'a') as env_file:
+                env_file.write(f'CHANGES=false\n')
         
     except Exception as e:
         print(f"An error occurred: {e}")
-        # with open(os.getenv('GITHUB_ENV'), 'a') as env_file:
-            # env_file.write(f'CHANGES=false\n')
+        with open(os.getenv('GITHUB_ENV'), 'a') as env_file:
+            env_file.write(f'CHANGES=false\n')
     finally:
         driver.quit()
 

@@ -1,4 +1,5 @@
 import os
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -62,19 +63,34 @@ def write_data_to_sheet(file_path, data):
 
 # データを取得してシートに書き込む関数
 def fetch_and_write_data(driver, file_path):
+    time.sleep(3)
+    head_info = driver.find_element(By.CLASS_NAME, "HEADINFO").text
+    print('head_info2:',head_info)
     all_data = []
     for _ in range(5):  # 5週間分のデータを取得
+        time.sleep(3)
         for day in range(1, 8):  # 各週の7日分のデータを取得
             day_id = f"DAY{day}"
-            day_element = driver.find_element(By.ID, day_id)
-            date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
-            time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
-            slots = [slot.text if slot.text else slot.find_element(By.TAG_NAME, "img").get_attribute("alt") for slot in time_slots]
-            all_data.append([date_text] + slots)
-        next_element = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "#NEXTWEEK"))
-        )
-        next_element.click()
+            try:
+                day_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.ID, day_id))
+                )
+                date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
+                print('date_text:', date_text)  # date_textを出力
+                time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
+                slots = [slot.text if slot.text else slot.find_element(By.TAG_NAME, "img").get_attribute("alt") for slot in time_slots]
+                all_data.append([date_text] + slots)
+            except Exception as e:
+                print(f"An error occurred while processing {day_id}: {e}")
+                continue  # エラーが発生した場合でも次の要素に進む
+        try:
+            next_element = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "#NEXTWEEK"))
+            )
+            next_element.click()
+        except Exception as e:
+            print(f"An error occurred while clicking NEXTWEEK: {e}")
+            break  # エラーが発生した場合はループを終了
     write_data_to_sheet(file_path, all_data)
 
 # 変更箇所を抽出する関数
@@ -110,7 +126,6 @@ def extract_changes(file1, file2):
 def main():
     try:
         driver.get("https://www.yoyaku-sports.city.suginami.tokyo.jp/w/")
-        print(driver.title)
         
         # iframeに移動
         iframe = WebDriverWait(driver, 10).until(
@@ -119,9 +134,16 @@ def main():
         driver.switch_to.frame(iframe)
         
         # 必要な要素をクリック
-        selectors = ["#BB1", "#BB1", "#T2", "#T7", "#T3", "#T2", "#T4"]
+        selectors = ["jump(1);", "jump(1);", "prpSelAuthEmpty('17');", "prpSelAuthEmpty('1703')","rgnSel('02')", "facSel('1010104')", "objSel('101010422049')"]
         for selector in selectors:
-            click_element(driver, selector)
+            time.sleep(1)
+            print('selector:',selector)
+            driver.execute_script(selector)
+            # HEADINFOとういclassがあるかどうかを確認
+            head_info = driver.find_element(By.CLASS_NAME, "HEADINFO").text
+            print('head_info:',head_info)
+
+    
         
         # シート2の内容をシート1にコピー
         sheet_omiya2_content = read_file('sheet_omiya2.txt')
@@ -136,13 +158,14 @@ def main():
         # シート1とシート2の違いを表示
         changes = extract_changes('sheet_omiya1.txt', 'sheet_omiya2.txt')
         if changes:
-            message = "大宮体育館で以下の時間帯で予約可能になりました:\n" + "\n".join(changes)
+            message = "荻窪体育館は以下の時間帯で予約可能になりました:\n" + "\n".join(changes)
             send_slack_notification(message)
             print(message)
             # 環境変数を設定して、変更があったことを示す
             with open(os.getenv('GITHUB_ENV'), 'a') as env_file:
                 env_file.write(f'CHANGES=true\n')
         else:
+            print("No changes found.")
             with open(os.getenv('GITHUB_ENV'), 'a') as env_file:
                 env_file.write(f'CHANGES=false\n')
         
