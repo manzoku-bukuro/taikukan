@@ -128,6 +128,9 @@ def main():
             time.sleep(1)
             print('selector:',selector)
             driver.execute_script(selector)
+            # HEADINFOとういclassがあるかどうかを確認
+            head_info = driver.find_elements(By.CLASS_NAME, "HEADINFO")
+            print('head_info:',head_info)
 
     
         
