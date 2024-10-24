@@ -63,23 +63,30 @@ def write_data_to_sheet(file_path, data):
 
 # データを取得してシートに書き込む関数
 def fetch_and_write_data(driver, file_path):
-    print("fetch_and_write_data")
     all_data = []
     for _ in range(5):  # 5週間分のデータを取得
         for day in range(1, 8):  # 各週の7日分のデータを取得
             day_id = f"DAY{day}"
-            print('day_id:',day_id)
-            day_element = driver.find_element(By.ID, day_id)
-            print('day_element:',day_element)
-            date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
-            print('--------',date_text)
-            time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
-            slots = [slot.text if slot.text else slot.find_element(By.TAG_NAME, "img").get_attribute("alt") for slot in time_slots]
-            all_data.append([date_text] + slots)
-        next_element = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "#NEXTWEEK"))
-        )
-        next_element.click()
+            try:
+                day_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.ID, day_id))
+                )
+                date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
+                print('date_text:', date_text)  # date_textを出力
+                time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
+                slots = [slot.text if slot.text else slot.find_element(By.TAG_NAME, "img").get_attribute("alt") for slot in time_slots]
+                all_data.append([date_text] + slots)
+            except Exception as e:
+                print(f"An error occurred while processing {day_id}: {e}")
+                continue  # エラーが発生した場合でも次の要素に進む
+        try:
+            next_element = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "#NEXTWEEK"))
+            )
+            next_element.click()
+        except Exception as e:
+            print(f"An error occurred while clicking NEXTWEEK: {e}")
+            break  # エラーが発生した場合はループを終了
     write_data_to_sheet(file_path, all_data)
 
 # 変更箇所を抽出する関数
