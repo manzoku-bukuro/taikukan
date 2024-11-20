@@ -50,10 +50,9 @@ try:
     # テキストが「現在満枠となっております」を含むかどうかをチェック
     if "現在満枠となっております" in div_text:
         print("現在満枠となっております")
-        send_slack_notification("現在満枠となっております")
     else:
         print("現在満枠ではありません")
-        send_slack_notification("現在満枠ではありません")
+        send_slack_notification("&bizが空きました！")
     
 except Exception as e:
     print(f"An error occurred: {e}")

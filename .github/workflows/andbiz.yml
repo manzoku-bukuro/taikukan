@@ -29,7 +29,3 @@ jobs:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       run: |
         python check_andbiz.py
-
-    - name: Check for changes
-      id: check-changes
-      run: echo "changes=${{ env.CHANGES }}" >> $GITHUB_ENV
