@@ -102,7 +102,7 @@ def extract_changes(file1, file2):
     holidays = ["(土曜日)", "(日曜日)"]
     spesial_holidays = ["10月14日", "11月4日"]
 
-    for i in range(0, min(len(lines1), len(lines2)), 11):  # 11行ごとに処理
+    for i in range(0, min(len(lines1), len(lines2)), 15):  # 11行ごとに処理
         if i + 10 >= len(lines1) or i + 10 >= len(lines2):
             print(f"Skipping incomplete data at index {i}")
             continue
