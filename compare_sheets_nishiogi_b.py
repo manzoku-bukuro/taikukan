@@ -158,7 +158,7 @@ def main():
         write_file('sheet_nishiogi_b_2.txt', [])
         
         # データを取得してシートに書き込む
-        fetch_and_write_data(driver, 'sheet_nishiogi_b_1.txt')
+        fetch_and_write_data(driver, 'sheet_nishiogi_b_2.txt')
 
         # シート1とシート2の違いを表示
         changes = extract_changes('sheet_nishiogi_b_1.txt', 'sheet_nishiogi_b_2.txt')
