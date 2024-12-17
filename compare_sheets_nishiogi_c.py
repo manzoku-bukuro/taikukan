@@ -139,7 +139,7 @@ def main():
         driver.switch_to.frame(iframe)
         
         # 必要な要素をクリック
-        selectors = ["jump(1);", "jump(1);", "prpSelAuthEmpty('18');", "prpSelAuthEmpty('5009')","rgnSel('02')", "facSel('0010008')", "objSel('001000809311')"]
+        selectors = ["jump(1);", "jump(1);", "prpSelAuthEmpty('18');", "prpSelAuthEmpty('5009')","rgnSel('02')", "facSel('0010008')", "objSel('001000809331')"]
         for selector in selectors:
             time.sleep(1)
             print('selector:',selector)
