@@ -117,7 +117,7 @@ def extract_changes(file1, file2):
 
             if line1 != line2 and line2 in ["空いています"]:
                 time_slot = time_slots[j]
-                if time_slot in ["19-21"]:
+                if time_slot in ["18", "19", "20"]:
                     time_slot = f"*{time_slot}*"
                 if current_day in holidays:
                     current_day = f"*{current_day}*"
