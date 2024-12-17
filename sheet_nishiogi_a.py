@@ -77,7 +77,7 @@ def fetch_and_write_data(driver, file_path):
                 )
                 date_text = day_element.find_element(By.CLASS_NAME, "DAYTX").text
                 print('date_text:', date_text)  # date_textを出力
-                time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS8")
+                time_slots = day_element.find_elements(By.CLASS_NAME, "KOMASTS12")
                 slots = [slot.text if slot.text else slot.find_element(By.TAG_NAME, "img").get_attribute("alt") for slot in time_slots]
                 all_data.append([date_text] + slots)
             except Exception as e:
@@ -98,7 +98,7 @@ def extract_changes(file1, file2):
     lines1 = read_file(file1)
     lines2 = read_file(file2)
     changes = []
-    time_slots = ["7-9", "9-11", "11-13", "13-15", "15-17", "17-19", "19-21", "21-23"]
+    time_slots = ["9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"]
     holidays = ["(土曜日)", "(日曜日)"]
     spesial_holidays = ["10月14日", "11月4日"]
 
@@ -115,7 +115,7 @@ def extract_changes(file1, file2):
             line1 = lines1[i + 2 + j].strip()
             line2 = lines2[i + 2 + j].strip()
 
-            if line1 != line2 and line2 in ["1", "2", "3", "4"]:
+            if line1 != line2 and line2 in ["空いています"]:
                 time_slot = time_slots[j]
                 if time_slot in ["19-21"]:
                     time_slot = f"*{time_slot}*"
