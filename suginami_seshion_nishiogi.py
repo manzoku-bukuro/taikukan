@@ -9,6 +9,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import json
 import os
+import requests
 from datetime import datetime
 
 def setup_filters(driver, wait):
@@ -82,6 +83,26 @@ def load_previous_data(filename):
             return {}
     return {}
 
+def send_slack_notification(new_slots):
+    """Slackに通知を送信"""
+    webhook_url = os.getenv("SLACK_WEBHOOK_URL")
+    if not webhook_url:
+        return
+
+    message = "🏀 杉並区体育施設の新しい空きが見つかりました:\n\n"
+    for slot in new_slots:
+        facility_name = "西荻地域区民センター・勤福会館" if slot['facility_key'] == "nishiogi" else "セシオン杉並"
+        message += f"📍 {facility_name}\n"
+        message += f"🗓️ {slot['date']}\n"
+        message += f"🏢 {slot['facility']}\n"
+        message += f"⏰ {slot['time_from']}-{slot['time_to']}\n\n"
+
+    payload = {"text": message}
+    try:
+        requests.post(webhook_url, json=payload)
+    except:
+        pass
+
 def save_data_if_new_slots_added(current_data, filename):
     """新しいスロットが追加された場合のみ保存"""
     previous_data = load_previous_data(filename)
@@ -109,6 +130,9 @@ def save_data_if_new_slots_added(current_data, filename):
         print(f"✅ 新しいスロットが追加されました（{len(new_slots)}件）: {filename}")
         for slot in new_slots:
             print(f"   🆕 {slot['facility']} - {slot['date']} {slot['time_from']}-{slot['time_to']}")
+
+        # Slack通知を送信
+        send_slack_notification(new_slots)
         return True
     else:
         print(f"📝 新しいスロットはありません: {filename}")

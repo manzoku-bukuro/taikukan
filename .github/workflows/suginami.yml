@@ -1,0 +1,38 @@
+name: Suginami Facility Monitor
+
+on:
+  schedule:
+    - cron: '*/30 7-23 * * *'  # 30分毎、7時-23時のみ実行
+  workflow_dispatch:
+
+jobs:
+  monitor-facilities:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium requests webdriver-manager
+
+    - name: Run Suginami facility monitor
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      run: |
+        python suginami_seshion_nishiogi.py
+
+    - name: Commit JSON updates if any
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add suginami_availability.json
+        git diff --staged --quiet || git commit -m "Update Suginami facility availability data"
+        git push || echo "No changes to push"
