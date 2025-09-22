@@ -140,7 +140,13 @@ def save_data_if_new_slots_added(current_data, filename):
 
 def process_nishiogi(driver, wait):
     """西荻地域区民センター・勤福会館の処理"""
-    driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+    print("🌐 サイトアクセス中...")
+    try:
+        driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+        print("✅ サイトアクセス成功")
+    except Exception as e:
+        print(f"❌ サイトアクセス失敗: {e}")
+        raise
     select_facility(driver, wait, "西荻地域区民センター・勤福会館")
     setup_filters(driver, wait)
     click_display_and_wait(driver, wait)
@@ -161,7 +167,13 @@ def process_nishiogi(driver, wait):
 
 def process_sesion(driver, wait):
     """セシオン杉並の処理"""
-    driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+    print("🌐 セシオン用サイトアクセス中...")
+    try:
+        driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+        print("✅ セシオン用サイトアクセス成功")
+    except Exception as e:
+        print(f"❌ セシオン用サイトアクセス失敗: {e}")
+        raise
     select_facility(driver, wait, "セシオン杉並")
     setup_filters(driver, wait)
     click_display_and_wait(driver, wait)
@@ -183,13 +195,8 @@ def run():
     print("🚀 スクリプト開始")
     options = Options()
     options.add_argument("--headless")
+    options.add_argument('--disable-dev-shm-usage')
     options.add_argument("--no-sandbox")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-plugins")
-    options.add_argument("--disable-images")
-    options.add_argument("--disable-javascript")
 
     print("🔧 ChromeDriver初期化中...")
     # GitHub Actions環境ではwebdriver_managerを使わずシステムのChromeDriverを使用
@@ -203,7 +210,7 @@ def run():
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         print("✅ ChromeDriver初期化成功（webdriver_manager版）")
 
-    wait = WebDriverWait(driver, 20)  # タイムアウトを20秒に延長
+    wait = WebDriverWait(driver, 10)
 
     try:
         print("🏢 西荻地域区民センター・勤福会館の処理開始")
