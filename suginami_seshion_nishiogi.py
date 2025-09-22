@@ -180,33 +180,58 @@ def process_sesion(driver, wait):
     return get_availability_data(driver, "sesion")
 
 def run():
+    print("🚀 スクリプト開始")
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-plugins")
+    options.add_argument("--disable-images")
+    options.add_argument("--disable-javascript")
 
+    print("🔧 ChromeDriver初期化中...")
     # GitHub Actions環境ではwebdriver_managerを使わずシステムのChromeDriverを使用
     try:
         driver = webdriver.Chrome(options=options)  # システムのChromeDriverを使用
-    except:
+        print("✅ ChromeDriver初期化成功（システム版）")
+    except Exception as e:
+        print(f"⚠️ システムChromeDriver失敗: {e}")
         # ローカル環境ではwebdriver_managerを使用
         from webdriver_manager.chrome import ChromeDriverManager
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    wait = WebDriverWait(driver, 10)
+        print("✅ ChromeDriver初期化成功（webdriver_manager版）")
+
+    wait = WebDriverWait(driver, 20)  # タイムアウトを20秒に延長
 
     try:
-        all_availability = process_nishiogi(driver, wait) + process_sesion(driver, wait)
+        print("🏢 西荻地域区民センター・勤福会館の処理開始")
+        nishiogi_data = process_nishiogi(driver, wait)
+        print(f"✅ 西荻データ取得完了: {len(nishiogi_data)}件")
+
+        print("🏢 セシオン杉並の処理開始")
+        sesion_data = process_sesion(driver, wait)
+        print(f"✅ セシオンデータ取得完了: {len(sesion_data)}件")
+
+        all_availability = nishiogi_data + sesion_data
         current_data = {
             "availability": all_availability,
             "last_checked": datetime.now().isoformat()
         }
-        return save_data_if_new_slots_added(current_data, "suginami_availability.json")
+
+        print("💾 データ保存処理開始")
+        result = save_data_if_new_slots_added(current_data, "suginami_availability.json")
+        print(f"🎯 処理完了: {result}")
+        return result
 
     except Exception as e:
         print(f"❌ エラー: {e}")
+        import traceback
+        traceback.print_exc()
         return False
     finally:
+        print("🔒 ChromeDriver終了")
         driver.quit()
 
 if __name__ == "__main__":
