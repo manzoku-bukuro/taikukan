@@ -8,7 +8,7 @@ import time
 import os
 
 def simple_test():
-    print("🚀 シンプルテスト開始")
+    print("🚀 段階的テスト開始")
 
     # 最小限のChrome設定
     options = Options()
@@ -21,55 +21,55 @@ def simple_test():
         driver = webdriver.Chrome(options=options)
         print("✅ ChromeDriver初期化成功")
 
-        # 短いタイムアウト設定
-        driver.set_page_load_timeout(60)
-        wait = WebDriverWait(driver, 15)
-
-        print("🌐 杉並区サイトアクセス...")
-
         try:
-            driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
-            print("✅ ページアクセス成功")
+            # ステップ1: データURLテスト
+            print("🔧 ステップ1: データURLテスト")
+            driver.get("data:text/html,<html><body><h1>Test</h1></body></html>")
+            print("✅ データURL成功")
 
-            # ページタイトル取得
-            title = driver.title
-            print(f"📄 ページタイトル: {title}")
+            # ステップ2: HTTPSサイトテスト（軽量）
+            print("🔧 ステップ2: HTTPSサイトテスト")
+            driver.get("https://httpbin.org/html")
+            print("✅ HTTPSサイト成功")
 
-            # ページソースの最初の500文字
-            page_source = driver.page_source[:500]
-            print(f"📄 ページソース先頭:\n{page_source}")
+            # ステップ3: Googleテスト
+            print("🔧 ステップ3: Googleテスト")
+            driver.set_page_load_timeout(30)
+            driver.get("https://www.google.com")
+            print("✅ Google成功")
 
-            # 基本要素の確認
+            # ステップ4: 杉並区サイトテスト（段階的）
+            print("🔧 ステップ4: 杉並区サイトテスト")
+            driver.set_page_load_timeout(10)  # 短いタイムアウト
+
             try:
-                # bodyタグの存在確認
-                body = driver.find_element(By.TAG_NAME, "body")
-                print(f"✅ bodyタグ発見: {body.tag_name}")
+                driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+                print("✅ 杉並区サイト成功")
 
-                # すべてのボタン要素を取得
-                buttons = driver.find_elements(By.TAG_NAME, "button")
-                print(f"🔘 ボタン数: {len(buttons)}")
+                # 基本情報取得
+                title = driver.title
+                print(f"📄 タイトル: {title}")
 
-                # 最初の3つのボタンのテキストを表示
-                for i, button in enumerate(buttons[:3]):
-                    try:
-                        text = button.text or button.get_attribute("aria-label") or "テキストなし"
-                        print(f"   ボタン{i+1}: {text}")
-                    except:
-                        print(f"   ボタン{i+1}: 取得エラー")
-
-                # すべてのリンク要素を取得
-                links = driver.find_elements(By.TAG_NAME, "a")
-                print(f"🔗 リンク数: {len(links)}")
-
-                # div要素の数
-                divs = driver.find_elements(By.TAG_NAME, "div")
-                print(f"📦 div要素数: {len(divs)}")
+                # ページソース先頭100文字
+                source = driver.page_source[:100]
+                print(f"📄 ソース先頭: {source}")
 
             except Exception as e:
-                print(f"❌ 要素取得エラー: {e}")
+                print(f"❌ 杉並区サイトエラー: {e}")
+
+                # タイムアウトを延長してリトライ
+                print("🔄 タイムアウト延長でリトライ")
+                driver.set_page_load_timeout(120)
+
+                try:
+                    driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+                    print("✅ 杉並区サイト成功（延長タイムアウト）")
+                except Exception as retry_e:
+                    print(f"❌ 杉並区サイト再試行失敗: {retry_e}")
+                    return False
 
         except Exception as e:
-            print(f"❌ ページアクセスエラー: {e}")
+            print(f"❌ テスト実行エラー: {e}")
             return False
         finally:
             driver.quit()
