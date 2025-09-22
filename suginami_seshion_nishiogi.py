@@ -199,38 +199,75 @@ def run():
     options.add_argument("--no-sandbox")
 
     print("🔧 ChromeDriver初期化中...")
-    # GitHub Actions環境ではwebdriver_managerを使わずシステムのChromeDriverを使用
     try:
-        driver = webdriver.Chrome(options=options)  # システムのChromeDriverを使用
-        print("✅ ChromeDriver初期化成功（システム版）")
+        driver = webdriver.Chrome(options=options)
+        print("✅ ChromeDriver初期化成功")
     except Exception as e:
-        print(f"⚠️ システムChromeDriver失敗: {e}")
-        # ローカル環境ではwebdriver_managerを使用
-        from webdriver_manager.chrome import ChromeDriverManager
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-        print("✅ ChromeDriver初期化成功（webdriver_manager版）")
+        print(f"❌ ChromeDriver初期化失敗: {e}")
+        return False
 
     wait = WebDriverWait(driver, 10)
 
     try:
-        print("🏢 西荻地域区民センター・勤福会館の処理開始")
-        nishiogi_data = process_nishiogi(driver, wait)
-        print(f"✅ 西荻データ取得完了: {len(nishiogi_data)}件")
+        print("\n📍 ステップ1: サイトアクセス")
+        driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+        print("✅ サイトアクセス成功")
 
-        print("🏢 セシオン杉並の処理開始")
-        sesion_data = process_sesion(driver, wait)
-        print(f"✅ セシオンデータ取得完了: {len(sesion_data)}件")
+        print("\n📍 ステップ2: 集会施設ボタンクリック")
+        button = wait.until(EC.presence_of_element_located((By.XPATH, "//button[text()='集会施設']")))
+        driver.execute_script("arguments[0].click();", button)
+        print("✅ 集会施設ボタンクリック成功")
 
-        all_availability = nishiogi_data + sesion_data
-        current_data = {
-            "availability": all_availability,
-            "last_checked": datetime.now().isoformat()
-        }
+        print("\n📍 ステップ3: 西荻地域区民センター・勤福会館選択")
+        checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[contains(text(), '西荻地域区民センター・勤福会館')]")))
+        driver.execute_script("arguments[0].click();", checkbox)
+        print("✅ 西荻地域区民センター・勤福会館選択成功")
 
-        print("💾 データ保存処理開始")
-        result = save_data_if_new_slots_added(current_data, "suginami_availability.json")
-        print(f"🎯 処理完了: {result}")
-        return result
+        print("\n📍 ステップ4: 次へ進むボタンクリック")
+        next_button = wait.until(EC.presence_of_element_located((By.XPATH, "//button[@aria-label='次へ進む']")))
+        driver.execute_script("arguments[0].click();", next_button)
+        print("✅ 次へ進むボタンクリック成功")
+
+        print("\n📍 ステップ5: 施設別空き状況画面待機")
+        wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='施設別空き状況']")))
+        print("✅ 施設別空き状況画面表示成功")
+
+        print("\n📍 ステップ6: 1ヶ月選択")
+        month_radio = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='1ヶ月']")))
+        driver.execute_script("arguments[0].click();", month_radio)
+        print("✅ 1ヶ月選択成功")
+
+        print("\n📍 ステップ7: 土曜日選択")
+        saturday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='土曜日']")))
+        driver.execute_script("arguments[0].click();", saturday_checkbox)
+        print("✅ 土曜日選択成功")
+
+        print("\n📍 ステップ8: 日曜日選択")
+        sunday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='日曜日']")))
+        driver.execute_script("arguments[0].click();", sunday_checkbox)
+        print("✅ 日曜日選択成功")
+
+        print("\n📍 ステップ9: 祝日選択")
+        holiday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='祝日']")))
+        driver.execute_script("arguments[0].click();", holiday_checkbox)
+        print("✅ 祝日選択成功")
+
+        print("\n📍 ステップ10: 表示ボタンクリック")
+        display_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), '表示')]")))
+        driver.execute_script("arguments[0].click();", display_button)
+        print("✅ 表示ボタンクリック成功")
+
+        print("\n📍 ステップ11: 読み込み完了待機")
+        try:
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "body.loading-indicator")))
+            wait.until_not(EC.presence_of_element_located((By.CSS_SELECTOR, "body.loading-indicator")))
+            print("✅ 読み込み完了（loading-indicator検出）")
+        except:
+            time.sleep(3)
+            print("✅ 読み込み完了（3秒待機）")
+
+        print("\n🎯 全ステップ完了！")
+        return True
 
     except Exception as e:
         print(f"❌ エラー: {e}")
