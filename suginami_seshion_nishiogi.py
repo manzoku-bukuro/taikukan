@@ -58,28 +58,32 @@ def run():
         elements_a = driver.find_elements(By.XPATH, "//tr[td[contains(text(), '体育室半面Ａ')]]//label[contains(@class, 'some')]/input[@type='checkbox']")
         elements_b = driver.find_elements(By.XPATH, "//tr[td[contains(text(), '体育室半面Ｂ')]]//label[contains(@class, 'some')]/input[@type='checkbox']")
 
-        for element in elements_a + elements_b:
-            driver.execute_script("arguments[0].click();", element)
+        if not elements_a and not elements_b:
+            print("⚠️  西荻地域区民センター・勤福会館: 土日祝での一部空きが見つかりませんでした")
 
-        # 次へ進む
-        wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='次へ進む']"))).click()
-        wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='時間帯別空き状況']")))
+        if elements_a or elements_b:
+            for element in elements_a + elements_b:
+                driver.execute_script("arguments[0].click();", element)
 
-        # 西荻地域区民センター・勤福会館の空き状況取得
-        print("🏢 西荻地域区民センター・勤福会館")
-        for date_element in driver.find_elements(By.CSS_SELECTOR, "div.events-date"):
-            print(f"📅 {date_element.text}")
-            for events_group in date_element.find_elements(By.XPATH, "./following-sibling::div[contains(@class, 'events-group')]"):
-                facility_name = events_group.find_element(By.CSS_SELECTOR, "div.top-info span.room-name span").text
-                print(f"  🏢 {facility_name}")
-                for slot in events_group.find_elements(By.CSS_SELECTOR, "div.display-cells > div"):
-                    try:
-                        if "vacant" in slot.find_element(By.CSS_SELECTOR, "div.btn-group-toggle").get_attribute("class"):
-                            time_from = slot.find_element(By.XPATH, ".//input[contains(@name, 'TimeFrom')]").get_attribute("value")
-                            time_to = slot.find_element(By.XPATH, ".//input[contains(@name, 'TimeTo')]").get_attribute("value")
-                            print(f"    ⏰ {time_from[:2]}:{time_from[2:]}-{time_to[:2]}:{time_to[2:]}: 空き")
-                    except:
-                        continue
+            # 次へ進む
+            wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='次へ進む']"))).click()
+            wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='時間帯別空き状況']")))
+
+            # 西荻地域区民センター・勤福会館の空き状況取得
+            print("🏢 西荻地域区民センター・勤福会館")
+            for date_element in driver.find_elements(By.CSS_SELECTOR, "div.events-date"):
+                print(f"📅 {date_element.text}")
+                for events_group in date_element.find_elements(By.XPATH, "./following-sibling::div[contains(@class, 'events-group')]"):
+                    facility_name = events_group.find_element(By.CSS_SELECTOR, "div.top-info span.room-name span").text
+                    print(f"  🏢 {facility_name}")
+                    for slot in events_group.find_elements(By.CSS_SELECTOR, "div.display-cells > div"):
+                        try:
+                            if "vacant" in slot.find_element(By.CSS_SELECTOR, "div.btn-group-toggle").get_attribute("class"):
+                                time_from = slot.find_element(By.XPATH, ".//input[contains(@name, 'TimeFrom')]").get_attribute("value")
+                                time_to = slot.find_element(By.XPATH, ".//input[contains(@name, 'TimeTo')]").get_attribute("value")
+                                print(f"    ⏰ {time_from[:2]}:{time_from[2:]}-{time_to[:2]}:{time_to[2:]}: 空き")
+                        except:
+                            continue
 
         # セシオン杉並の処理開始
         print("\n🔄 セシオン杉並の情報を取得中...")
@@ -120,28 +124,33 @@ def run():
             time.sleep(3)
 
         # 体育室全面の一部空き選択
-        for element in driver.find_elements(By.XPATH, "//tr[td[contains(text(), '体育室全面')]]//label[contains(@class, 'some')]/input[@type='checkbox']"):
-            driver.execute_script("arguments[0].click();", element)
+        elements = driver.find_elements(By.XPATH, "//tr[td[contains(text(), '体育室全面')]]//label[contains(@class, 'some')]/input[@type='checkbox']")
 
-        # 次へ進む
-        wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='次へ進む']"))).click()
-        wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='時間帯別空き状況']")))
+        if not elements:
+            print("⚠️  セシオン杉並: 土日祝での一部空きが見つかりませんでした")
+        else:
+            for element in elements:
+                driver.execute_script("arguments[0].click();", element)
 
-        # セシオン杉並の空き状況取得
-        print("🏢 セシオン杉並")
-        for date_element in driver.find_elements(By.CSS_SELECTOR, "div.events-date"):
-            print(f"📅 {date_element.text}")
-            for events_group in date_element.find_elements(By.XPATH, "./following-sibling::div[contains(@class, 'events-group')]"):
-                facility_name = events_group.find_element(By.CSS_SELECTOR, "div.top-info span.room-name span").text
-                print(f"  🏢 {facility_name}")
-                for slot in events_group.find_elements(By.CSS_SELECTOR, "div.display-cells > div"):
-                    try:
-                        if "vacant" in slot.find_element(By.CSS_SELECTOR, "div.btn-group-toggle").get_attribute("class"):
-                            time_from = slot.find_element(By.XPATH, ".//input[contains(@name, 'TimeFrom')]").get_attribute("value")
-                            time_to = slot.find_element(By.XPATH, ".//input[contains(@name, 'TimeTo')]").get_attribute("value")
-                            print(f"    ⏰ {time_from[:2]}:{time_from[2:]}-{time_to[:2]}:{time_to[2:]}: 空き")
-                    except:
-                        continue
+            # 次へ進む
+            wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='次へ進む']"))).click()
+            wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='時間帯別空き状況']")))
+
+            # セシオン杉並の空き状況取得
+            print("🏢 セシオン杉並")
+            for date_element in driver.find_elements(By.CSS_SELECTOR, "div.events-date"):
+                print(f"📅 {date_element.text}")
+                for events_group in date_element.find_elements(By.XPATH, "./following-sibling::div[contains(@class, 'events-group')]"):
+                    facility_name = events_group.find_element(By.CSS_SELECTOR, "div.top-info span.room-name span").text
+                    print(f"  🏢 {facility_name}")
+                    for slot in events_group.find_elements(By.CSS_SELECTOR, "div.display-cells > div"):
+                        try:
+                            if "vacant" in slot.find_element(By.CSS_SELECTOR, "div.btn-group-toggle").get_attribute("class"):
+                                time_from = slot.find_element(By.XPATH, ".//input[contains(@name, 'TimeFrom')]").get_attribute("value")
+                                time_to = slot.find_element(By.XPATH, ".//input[contains(@name, 'TimeTo')]").get_attribute("value")
+                                print(f"    ⏰ {time_from[:2]}:{time_from[2:]}-{time_to[:2]}:{time_to[2:]}: 空き")
+                        except:
+                            continue
 
         return True
 
