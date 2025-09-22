@@ -223,7 +223,7 @@ def run():
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-plugins")
     options.add_argument("--disable-images")
-    options.add_argument("--disable-javascript")
+    # options.add_argument("--disable-javascript")  # JavaScriptを有効にしてテスト
     options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36")
 
     print("🔧 ChromeDriver初期化テスト...")
@@ -238,6 +238,35 @@ def run():
 
             title = driver.title
             print(f"✅ タイトル取得成功: {title}")
+
+            # 外部サイトアクセステスト
+            print("🔧 外部サイトアクセステスト...")
+            driver.set_page_load_timeout(30)  # 30秒タイムアウト
+
+            try:
+                print("🌐 Google接続テスト...")
+                driver.get("https://www.google.com")
+                print("✅ Google接続成功")
+            except Exception as e:
+                print(f"❌ Google接続失敗: {e}")
+
+            try:
+                print("🌐 杉並区サイト接続テスト...")
+                driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+                print("✅ 杉並区サイト接続成功")
+
+                # ページタイトル確認
+                title = driver.title
+                print(f"📄 ページタイトル: {title}")
+
+                # ページソースの一部確認
+                page_source = driver.page_source[:200]
+                print(f"📄 ページソース先頭: {page_source}")
+
+            except Exception as e:
+                print(f"❌ 杉並区サイト接続失敗: {e}")
+                import traceback
+                traceback.print_exc()
 
         except Exception as e:
             print(f"❌ 基本接続失敗: {e}")
