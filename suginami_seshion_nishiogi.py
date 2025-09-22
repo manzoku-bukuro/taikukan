@@ -140,13 +140,7 @@ def save_data_if_new_slots_added(current_data, filename):
 
 def process_nishiogi(driver, wait):
     """西荻地域区民センター・勤福会館の処理"""
-    print("🌐 サイトアクセス中...")
-    try:
-        driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
-        print("✅ サイトアクセス成功")
-    except Exception as e:
-        print(f"❌ サイトアクセス失敗: {e}")
-        raise
+    driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
     select_facility(driver, wait, "西荻地域区民センター・勤福会館")
     setup_filters(driver, wait)
     click_display_and_wait(driver, wait)
@@ -167,13 +161,7 @@ def process_nishiogi(driver, wait):
 
 def process_sesion(driver, wait):
     """セシオン杉並の処理"""
-    print("🌐 セシオン用サイトアクセス中...")
-    try:
-        driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
-        print("✅ セシオン用サイトアクセス成功")
-    except Exception as e:
-        print(f"❌ セシオン用サイトアクセス失敗: {e}")
-        raise
+    driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
     select_facility(driver, wait, "セシオン杉並")
     setup_filters(driver, wait)
     click_display_and_wait(driver, wait)
@@ -192,96 +180,68 @@ def process_sesion(driver, wait):
     return get_availability_data(driver, "sesion")
 
 def run():
-    print("🚀 GitHub Actions環境診断開始")
+    print("🚀 スクリプト開始")
 
-    # 環境情報の表示
-    print(f"🔍 Python version: {os.sys.version}")
-    print(f"🔍 Current working directory: {os.getcwd()}")
-    print(f"🔍 GITHUB_ACTIONS: {os.getenv('GITHUB_ACTIONS', 'not set')}")
+    # GitHub Actions環境での最適化
+    is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
 
-    # Chromeの存在確認
-    try:
-        result = os.system("which google-chrome || which google-chrome-stable || which chromium-browser")
-        print(f"🔍 Chrome検索結果: {result}")
-    except:
-        print("❌ Chrome検索失敗")
-
-    # ChromeDriverの存在確認
-    try:
-        result = os.system("which chromedriver")
-        print(f"🔍 ChromeDriver検索結果: {result}")
-    except:
-        print("❌ ChromeDriver検索失敗")
-
-    print("\n🔧 最小限のChrome設定でテスト")
     options = Options()
     options.add_argument("--headless")
+    options.add_argument('--disable-dev-shm-usage')
     options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-features=VizDisplayCompositor")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-plugins")
-    options.add_argument("--disable-images")
-    # options.add_argument("--disable-javascript")  # JavaScriptを有効にしてテスト
-    options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36")
 
-    print("🔧 ChromeDriver初期化テスト...")
+    if is_github_actions:
+        print("🔧 GitHub Actions環境用の追加設定を適用")
+        # メモリとCPU使用量を削減
+        options.add_argument("--disable-gpu")
+        options.add_argument("--disable-software-rasterizer")
+        options.add_argument("--disable-background-timer-throttling")
+        options.add_argument("--disable-renderer-backgrounding")
+        options.add_argument("--disable-backgrounding-occluded-windows")
+        options.add_argument("--disable-ipc-flooding-protection")
+        options.add_argument("--disable-features=TranslateUI,BlinkGenPropertyTrees")
+        options.add_argument("--disable-default-apps")
+        options.add_argument("--disable-sync")
+        options.add_argument("--no-first-run")
+        options.add_argument("--no-default-browser-check")
+        options.add_argument("--disable-web-security")
+        options.add_argument("--allow-running-insecure-content")
+        # ページ読み込み戦略を変更
+        options.page_load_strategy = 'eager'
+        # メモリ制限
+        options.add_argument("--memory-pressure-off")
+        options.add_argument("--max_old_space_size=4096")
+        # より一般的なUser-Agent
+        options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+
     try:
         driver = webdriver.Chrome(options=options)
-        print("✅ ChromeDriver初期化成功")
+        if is_github_actions:
+            # GitHub Actions環境での追加タイムアウト設定
+            driver.set_page_load_timeout(120)  # 2分
+            driver.implicitly_wait(15)  # 15秒
+    except:
+        from webdriver_manager.chrome import ChromeDriverManager
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        if is_github_actions:
+            driver.set_page_load_timeout(120)
+            driver.implicitly_wait(15)
 
-        print("🔧 基本接続テスト...")
-        try:
-            driver.get("data:text/html,<html><body><h1>Test</h1></body></html>")
-            print("✅ 基本接続成功")
+    wait = WebDriverWait(driver, 30 if is_github_actions else 10)
 
-            title = driver.title
-            print(f"✅ タイトル取得成功: {title}")
-
-            # 外部サイトアクセステスト
-            print("🔧 外部サイトアクセステスト...")
-            driver.set_page_load_timeout(30)  # 30秒タイムアウト
-
-            try:
-                print("🌐 Google接続テスト...")
-                driver.get("https://www.google.com")
-                print("✅ Google接続成功")
-            except Exception as e:
-                print(f"❌ Google接続失敗: {e}")
-
-            try:
-                print("🌐 杉並区サイト接続テスト...")
-                driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
-                print("✅ 杉並区サイト接続成功")
-
-                # ページタイトル確認
-                title = driver.title
-                print(f"📄 ページタイトル: {title}")
-
-                # ページソースの一部確認
-                page_source = driver.page_source[:200]
-                print(f"📄 ページソース先頭: {page_source}")
-
-            except Exception as e:
-                print(f"❌ 杉並区サイト接続失敗: {e}")
-                import traceback
-                traceback.print_exc()
-
-        except Exception as e:
-            print(f"❌ 基本接続失敗: {e}")
-            return False
-        finally:
-            driver.quit()
-            print("✅ ChromeDriver正常終了")
-
-        return True
+    try:
+        all_availability = process_nishiogi(driver, wait) + process_sesion(driver, wait)
+        current_data = {
+            "availability": all_availability,
+            "last_checked": datetime.now().isoformat()
+        }
+        return save_data_if_new_slots_added(current_data, "suginami_availability.json")
 
     except Exception as e:
-        print(f"❌ ChromeDriver初期化失敗: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ エラー: {e}")
         return False
+    finally:
+        driver.quit()
 
 if __name__ == "__main__":
     run()
