@@ -33,7 +33,39 @@ def run():
 
         # 施設別空き状況ページ確認
         wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='施設別空き状況']")))
-        print("✅ 施設別空き状況ページに到達")
+
+        # 1ヶ月ラジオボタン選択
+        month_radio = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='1ヶ月']")))
+        driver.execute_script("arguments[0].click();", month_radio)
+
+        # 土曜日チェックボックス選択
+        saturday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='土曜日']")))
+        driver.execute_script("arguments[0].click();", saturday_checkbox)
+
+        # 日曜日チェックボックス選択
+        sunday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='日曜日']")))
+        driver.execute_script("arguments[0].click();", sunday_checkbox)
+
+        # 祝日チェックボックス選択
+        holiday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='祝日']")))
+        driver.execute_script("arguments[0].click();", holiday_checkbox)
+
+        # 表示ボタンクリック
+        display_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), '表示')] | //input[@type='submit' and @value='表示']")))
+        driver.execute_script("arguments[0].click();", display_button)
+
+        # loading-indicatorクラスが消えるまで待機
+        try:
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "body.loading-indicator")))
+            wait.until_not(EC.presence_of_element_located((By.CSS_SELECTOR, "body.loading-indicator")))
+        except:
+            import time
+            time.sleep(3)
+
+        # テーブル取得
+        table = wait.until(EC.presence_of_element_located((By.XPATH, "//table[@class='table table-schedule table-striped w-auto']")))
+        thead = table.find_element(By.TAG_NAME, "thead")
+        print(thead.text)
         return True
 
     except Exception as e:
