@@ -6,35 +6,34 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-import time
 
 def run():
-    """杉並区さざんかねっと - 集会施設ボタンクリック"""
-    # Chrome設定
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-gpu")
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-gpu")
 
-    # WebDriver起動
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     wait = WebDriverWait(driver, 10)
 
     try:
-        # 1. ホームページアクセス
         driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
-        wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
-        # 2. 集会施設ボタンクリック
+        # 集会施設ボタンクリック
         button = wait.until(EC.presence_of_element_located((By.XPATH, "//button[text()='集会施設']")))
         driver.execute_script("arguments[0].click();", button)
 
-        # 3. 遷移確認
-        wait.until(lambda driver: "AvailabilityCheckApplySelectFacility" in driver.current_url)
-        wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='施設選択']")))
+        # 西荻地域区民センター・勤福会館チェック
+        checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[contains(text(), '西荻地域区民センター・勤福会館')]")))
+        driver.execute_script("arguments[0].click();", checkbox)
 
-        print("✅ 成功: 施設選択ページに遷移しました")
+        # 次へ進む
+        next_button = wait.until(EC.presence_of_element_located((By.XPATH, "//button[@aria-label='次へ進む']")))
+        driver.execute_script("arguments[0].click();", next_button)
+
+        # 施設別空き状況ページ確認
+        wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='施設別空き状況']")))
+        print("✅ 施設別空き状況ページに到達")
         return True
 
     except Exception as e:
