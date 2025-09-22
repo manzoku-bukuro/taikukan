@@ -7,6 +7,9 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import time
+import json
+import os
+from datetime import datetime
 
 def setup_filters(driver, wait):
     """絞り込み設定を行う共通処理"""
@@ -45,21 +48,71 @@ def select_facility(driver, wait, facility_name):
     next_button = wait.until(EC.presence_of_element_located((By.XPATH, "//button[@aria-label='次へ進む']")))
     driver.execute_script("arguments[0].click();", next_button)
 
-def get_availability_data(driver):
-    """空き状況データを取得"""
+def get_availability_data(driver, facility_key):
+    """空き状況データを取得してリストで返す"""
+    availability_data = []
     for date_element in driver.find_elements(By.CSS_SELECTOR, "div.events-date"):
-        print(f"📅 {date_element.text}")
+        date_text = date_element.text
         for events_group in date_element.find_elements(By.XPATH, "./following-sibling::div[contains(@class, 'events-group')]"):
             facility_name = events_group.find_element(By.CSS_SELECTOR, "div.top-info span.room-name span").text
-            print(f"  🏢 {facility_name}")
             for slot in events_group.find_elements(By.CSS_SELECTOR, "div.display-cells > div"):
                 try:
                     if "vacant" in slot.find_element(By.CSS_SELECTOR, "div.btn-group-toggle").get_attribute("class"):
                         time_from = slot.find_element(By.XPATH, ".//input[contains(@name, 'TimeFrom')]").get_attribute("value")
                         time_to = slot.find_element(By.XPATH, ".//input[contains(@name, 'TimeTo')]").get_attribute("value")
-                        print(f"    ⏰ {time_from[:2]}:{time_from[2:]}-{time_to[:2]}:{time_to[2:]}: 空き")
+                        availability_data.append({
+                            "date": date_text,
+                            "facility": facility_name,
+                            "time_from": f"{time_from[:2]}:{time_from[2:]}",
+                            "time_to": f"{time_to[:2]}:{time_to[2:]}",
+                            "facility_key": facility_key
+                        })
                 except:
                     continue
+    return availability_data
+
+
+def load_previous_data(filename):
+    """前回のデータを読み込み"""
+    if os.path.exists(filename):
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+def save_data_if_new_slots_added(current_data, filename):
+    """新しいスロットが追加された場合のみ保存"""
+    previous_data = load_previous_data(filename)
+
+    current_availability = current_data.get("availability", [])
+    previous_availability = previous_data.get("availability", [])
+
+    # 前回のデータを識別子のセットに変換
+    previous_slots = set()
+    for slot in previous_availability:
+        slot_id = f"{slot['facility_key']}_{slot['date']}_{slot['facility']}_{slot['time_from']}_{slot['time_to']}"
+        previous_slots.add(slot_id)
+
+    # 今回のデータから新しいスロットをチェック
+    new_slots = []
+    for slot in current_availability:
+        slot_id = f"{slot['facility_key']}_{slot['date']}_{slot['facility']}_{slot['time_from']}_{slot['time_to']}"
+        if slot_id not in previous_slots:
+            new_slots.append(slot)
+
+    if new_slots:
+        current_data["last_updated"] = datetime.now().isoformat()
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(current_data, f, ensure_ascii=False, indent=2)
+        print(f"✅ 新しいスロットが追加されました（{len(new_slots)}件）: {filename}")
+        for slot in new_slots:
+            print(f"   🆕 {slot['facility']} - {slot['date']} {slot['time_from']}-{slot['time_to']}")
+        return True
+    else:
+        print(f"📝 新しいスロットはありません: {filename}")
+        return False
 
 def process_nishiogi(driver, wait):
     """西荻地域区民センター・勤福会館の処理"""
@@ -68,50 +121,39 @@ def process_nishiogi(driver, wait):
     setup_filters(driver, wait)
     click_display_and_wait(driver, wait)
 
-    # 体育室半面Ａ・Ｂの一部空き選択
     elements_a = driver.find_elements(By.XPATH, "//tr[td[contains(text(), '体育室半面Ａ')]]//label[contains(@class, 'some')]/input[@type='checkbox']")
     elements_b = driver.find_elements(By.XPATH, "//tr[td[contains(text(), '体育室半面Ｂ')]]//label[contains(@class, 'some')]/input[@type='checkbox']")
 
     if not elements_a and not elements_b:
-        print("⚠️  西荻地域区民センター・勤福会館: 土日祝での一部空きが見つかりませんでした")
-        return
+        return []
 
     for element in elements_a + elements_b:
         driver.execute_script("arguments[0].click();", element)
 
-    # 次へ進む
     wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='次へ進む']"))).click()
     wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='時間帯別空き状況']")))
 
-    # 西荻地域区民センター・勤福会館の空き状況取得
-    print("🏢 西荻地域区民センター・勤福会館")
-    get_availability_data(driver)
+    return get_availability_data(driver, "nishiogi")
 
 def process_sesion(driver, wait):
     """セシオン杉並の処理"""
-    print("\n🔄 セシオン杉並の情報を取得中...")
     driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
     select_facility(driver, wait, "セシオン杉並")
     setup_filters(driver, wait)
     click_display_and_wait(driver, wait)
 
-    # 体育室全面の一部空き選択
     elements = driver.find_elements(By.XPATH, "//tr[td[contains(text(), '体育室全面')]]//label[contains(@class, 'some')]/input[@type='checkbox']")
 
     if not elements:
-        print("⚠️  セシオン杉並: 土日祝での一部空きが見つかりませんでした")
-        return
+        return []
 
     for element in elements:
         driver.execute_script("arguments[0].click();", element)
 
-    # 次へ進む
     wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='次へ進む']"))).click()
     wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='時間帯別空き状況']")))
 
-    # セシオン杉並の空き状況取得
-    print("🏢 セシオン杉並")
-    get_availability_data(driver)
+    return get_availability_data(driver, "sesion")
 
 def run():
     options = Options()
@@ -123,9 +165,12 @@ def run():
     wait = WebDriverWait(driver, 10)
 
     try:
-        process_nishiogi(driver, wait)
-        process_sesion(driver, wait)
-        return True
+        all_availability = process_nishiogi(driver, wait) + process_sesion(driver, wait)
+        current_data = {
+            "availability": all_availability,
+            "last_checked": datetime.now().isoformat()
+        }
+        return save_data_if_new_slots_added(current_data, "suginami_availability.json")
 
     except Exception as e:
         print(f"❌ エラー: {e}")

@@ -1,0 +1,62 @@
+{
+  "availability": [
+    {
+      "date": "2025年 9月27日 (土)",
+      "facility": "体育室半面Ａ",
+      "time_from": "16:00",
+      "time_to": "17:00",
+      "facility_key": "nishiogi"
+    },
+    {
+      "date": "2025年 9月27日 (土)",
+      "facility": "体育室半面Ｂ",
+      "time_from": "16:00",
+      "time_to": "17:00",
+      "facility_key": "nishiogi"
+    },
+    {
+      "date": "2025年 9月28日 (日)",
+      "facility": "体育室半面Ａ",
+      "time_from": "17:00",
+      "time_to": "18:00",
+      "facility_key": "nishiogi"
+    },
+    {
+      "date": "2025年 9月28日 (日)",
+      "facility": "体育室半面Ａ",
+      "time_from": "18:00",
+      "time_to": "19:00",
+      "facility_key": "nishiogi"
+    },
+    {
+      "date": "2025年 9月28日 (日)",
+      "facility": "体育室半面Ｂ",
+      "time_from": "17:00",
+      "time_to": "18:00",
+      "facility_key": "nishiogi"
+    },
+    {
+      "date": "2025年 9月28日 (日)",
+      "facility": "体育室半面Ｂ",
+      "time_from": "18:00",
+      "time_to": "19:00",
+      "facility_key": "nishiogi"
+    },
+    {
+      "date": "2025年 10月4日 (土)",
+      "facility": "体育室半面Ｂ",
+      "time_from": "90:0",
+      "time_to": "10:00",
+      "facility_key": "nishiogi"
+    },
+    {
+      "date": "2025年 10月12日 (日)",
+      "facility": "体育室全面",
+      "time_from": "11:00",
+      "time_to": "12:00",
+      "facility_key": "sesion"
+    }
+  ],
+  "last_checked": "2025-09-23T00:34:19.111447",
+  "last_updated": "2025-09-23T00:34:19.111584"
+}
