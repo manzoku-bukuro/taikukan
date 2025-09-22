@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+import time
 
 def run():
     options = Options()
@@ -19,53 +20,53 @@ def run():
     try:
         driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
 
-        # 集会施設ボタンクリック
+        # 集会施設→西荻→次へ進む
         button = wait.until(EC.presence_of_element_located((By.XPATH, "//button[text()='集会施設']")))
         driver.execute_script("arguments[0].click();", button)
 
-        # 西荻地域区民センター・勤福会館チェック
         checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[contains(text(), '西荻地域区民センター・勤福会館')]")))
         driver.execute_script("arguments[0].click();", checkbox)
 
-        # 次へ進む
         next_button = wait.until(EC.presence_of_element_located((By.XPATH, "//button[@aria-label='次へ進む']")))
         driver.execute_script("arguments[0].click();", next_button)
 
-        # 施設別空き状況ページ確認
+        # 絞り込み設定
         wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='施設別空き状況']")))
 
-        # 1ヶ月ラジオボタン選択
         month_radio = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='1ヶ月']")))
         driver.execute_script("arguments[0].click();", month_radio)
 
-        # 土曜日チェックボックス選択
         saturday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='土曜日']")))
         driver.execute_script("arguments[0].click();", saturday_checkbox)
 
-        # 日曜日チェックボックス選択
         sunday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='日曜日']")))
         driver.execute_script("arguments[0].click();", sunday_checkbox)
 
-        # 祝日チェックボックス選択
         holiday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='祝日']")))
         driver.execute_script("arguments[0].click();", holiday_checkbox)
 
-        # 表示ボタンクリック
-        display_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), '表示')] | //input[@type='submit' and @value='表示']")))
+        # 表示ボタンクリック・待機
+        display_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), '表示')]")))
         driver.execute_script("arguments[0].click();", display_button)
-
-        # loading-indicatorクラスが消えるまで待機
         try:
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "body.loading-indicator")))
             wait.until_not(EC.presence_of_element_located((By.CSS_SELECTOR, "body.loading-indicator")))
         except:
-            import time
             time.sleep(3)
 
-        # テーブル取得
-        table = wait.until(EC.presence_of_element_located((By.XPATH, "//table[@class='table table-schedule table-striped w-auto']")))
-        thead = table.find_element(By.TAG_NAME, "thead")
-        print(thead.text)
+        # 体育室半面Ａ・Ｂの一部空き選択
+        elements_a = driver.find_elements(By.XPATH, "//tr[td[contains(text(), '体育室半面Ａ')]]//label[contains(@class, 'some')]/input[@type='checkbox']")
+        elements_b = driver.find_elements(By.XPATH, "//tr[td[contains(text(), '体育室半面Ｂ')]]//label[contains(@class, 'some')]/input[@type='checkbox']")
+
+        for element in elements_a + elements_b:
+            driver.execute_script("arguments[0].click();", element)
+
+        print(f"体育室半面Ａ: {len(elements_a)} 件、体育室半面Ｂ: {len(elements_b)} 件")
+
+        # 時間帯別空き状況ページに遷移
+        next_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='次へ進む']")))
+        driver.execute_script("arguments[0].click();", next_button)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='時間帯別空き状況']")))
         return True
 
     except Exception as e:
