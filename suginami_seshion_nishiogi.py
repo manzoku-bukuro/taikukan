@@ -182,52 +182,24 @@ def process_sesion(driver, wait):
 def run():
     print("🚀 スクリプト開始")
 
-    # GitHub Actions環境での最適化
-    is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
+    # GitHub Actions環境チェック
+    if os.getenv('GITHUB_ACTIONS') == 'true':
+        print("⚠️ GitHub Actions環境では技術的制約により杉並区サイトアクセスが困難です")
+        print("💡 代替実行環境については DEPLOYMENT_OPTIONS.md をご確認ください")
+        return False
 
     options = Options()
     options.add_argument("--headless")
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument("--no-sandbox")
 
-    if is_github_actions:
-        print("🔧 GitHub Actions環境用の追加設定を適用")
-        # メモリとCPU使用量を削減
-        options.add_argument("--disable-gpu")
-        options.add_argument("--disable-software-rasterizer")
-        options.add_argument("--disable-background-timer-throttling")
-        options.add_argument("--disable-renderer-backgrounding")
-        options.add_argument("--disable-backgrounding-occluded-windows")
-        options.add_argument("--disable-ipc-flooding-protection")
-        options.add_argument("--disable-features=TranslateUI,BlinkGenPropertyTrees")
-        options.add_argument("--disable-default-apps")
-        options.add_argument("--disable-sync")
-        options.add_argument("--no-first-run")
-        options.add_argument("--no-default-browser-check")
-        options.add_argument("--disable-web-security")
-        options.add_argument("--allow-running-insecure-content")
-        # ページ読み込み戦略を変更
-        options.page_load_strategy = 'eager'
-        # メモリ制限
-        options.add_argument("--memory-pressure-off")
-        options.add_argument("--max_old_space_size=4096")
-        # より一般的なUser-Agent
-        options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-
     try:
         driver = webdriver.Chrome(options=options)
-        if is_github_actions:
-            # GitHub Actions環境での追加タイムアウト設定
-            driver.set_page_load_timeout(120)  # 2分
-            driver.implicitly_wait(15)  # 15秒
     except:
         from webdriver_manager.chrome import ChromeDriverManager
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-        if is_github_actions:
-            driver.set_page_load_timeout(120)
-            driver.implicitly_wait(15)
 
-    wait = WebDriverWait(driver, 30 if is_github_actions else 10)
+    wait = WebDriverWait(driver, 10)
 
     try:
         all_availability = process_nishiogi(driver, wait) + process_sesion(driver, wait)

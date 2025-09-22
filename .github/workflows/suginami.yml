@@ -1,8 +1,8 @@
 name: Suginami Facility Monitor
 
 on:
-  schedule:
-    - cron: '*/30 7-23 * * *'  # 最適化設定でリトライ
+  # schedule:
+  #   - cron: '*/30 7-23 * * *'  # GitHub Actions環境では技術的制約により実行困難
   workflow_dispatch:
 
 jobs:
