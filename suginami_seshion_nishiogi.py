@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+# from webdriver_manager.chrome import ChromeDriverManager
 import time
 import json
 import os
@@ -184,8 +184,15 @@ def run():
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    # GitHub Actions環境ではwebdriver_managerを使わずシステムのChromeDriverを使用
+    try:
+        driver = webdriver.Chrome(options=options)  # システムのChromeDriverを使用
+    except:
+        # ローカル環境ではwebdriver_managerを使用
+        from webdriver_manager.chrome import ChromeDriverManager
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     wait = WebDriverWait(driver, 10)
 
     try:
