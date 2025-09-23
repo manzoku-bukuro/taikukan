@@ -21,7 +21,16 @@ jobs:
         python -m pip install --upgrade pip
         pip install selenium
 
+    - name: Setup Chrome and Virtual Display
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable xvfb
+        export DISPLAY=:99
+        Xvfb :99 -ac -screen 0 1280x1024x24 &
+
     - name: Run simple test
-      timeout-minutes: 5
+      timeout-minutes: 15
+      env:
+        DISPLAY: :99
       run: |
         python simple_test.py
