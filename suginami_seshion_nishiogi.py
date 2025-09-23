@@ -15,18 +15,26 @@ from datetime import datetime
 def setup_filters(driver, wait):
     """絞り込み設定を行う共通処理"""
     wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='施設別空き状況']")))
+    time.sleep(2)  # 安全な待機
 
-    month_radio = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='1ヶ月']")))
-    driver.execute_script("arguments[0].click();", month_radio)
+    # 各要素のクリックをリトライ機能付きで実行
+    def safe_click(xpath, description):
+        for attempt in range(3):
+            try:
+                element = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
+                driver.execute_script("arguments[0].click();", element)
+                time.sleep(0.5)
+                print(f"✅ {description} クリック成功")
+                return True
+            except Exception as e:
+                print(f"⚠️ {description} クリック試行 {attempt + 1}/3 失敗: {e}")
+                time.sleep(1)
+        return False
 
-    saturday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='土曜日']")))
-    driver.execute_script("arguments[0].click();", saturday_checkbox)
-
-    sunday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='日曜日']")))
-    driver.execute_script("arguments[0].click();", sunday_checkbox)
-
-    holiday_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, "//label[text()='祝日']")))
-    driver.execute_script("arguments[0].click();", holiday_checkbox)
+    safe_click("//label[text()='1ヶ月']", "1ヶ月選択")
+    safe_click("//label[text()='土曜日']", "土曜日選択")
+    safe_click("//label[text()='日曜日']", "日曜日選択")
+    safe_click("//label[text()='祝日']", "祝日選択")
 
 def click_display_and_wait(driver, wait):
     """表示ボタンをクリックして読み込み完了まで待機"""
@@ -140,7 +148,21 @@ def save_data_if_new_slots_added(current_data, filename):
 
 def process_nishiogi(driver, wait):
     """西荻地域区民センター・勤福会館の処理"""
-    driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+    print("🏢 西荻地域区民センター・勤福会館 処理開始")
+
+    # アクセスにリトライ機能追加
+    for attempt in range(3):
+        try:
+            driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+            time.sleep(3)  # ページロード待機
+            break
+        except Exception as e:
+            print(f"⚠️ ページアクセス試行 {attempt + 1}/3 失敗: {e}")
+            if attempt < 2:
+                time.sleep(2)
+            else:
+                return []
+
     select_facility(driver, wait, "西荻地域区民センター・勤福会館")
     setup_filters(driver, wait)
     click_display_and_wait(driver, wait)
@@ -149,10 +171,13 @@ def process_nishiogi(driver, wait):
     elements_b = driver.find_elements(By.XPATH, "//tr[td[contains(text(), '体育室半面Ｂ')]]//label[contains(@class, 'some')]/input[@type='checkbox']")
 
     if not elements_a and not elements_b:
+        print("❌ 体育室要素が見つかりません")
         return []
 
+    print(f"✅ 体育室要素発見: A={len(elements_a)}, B={len(elements_b)}")
     for element in elements_a + elements_b:
         driver.execute_script("arguments[0].click();", element)
+        time.sleep(0.2)
 
     wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='次へ進む']"))).click()
     wait.until(EC.presence_of_element_located((By.XPATH, "//h2[text()='時間帯別空き状況']")))
@@ -182,24 +207,49 @@ def process_sesion(driver, wait):
 def run():
     print("🚀 スクリプト開始")
 
-    # GitHub Actions環境チェック
-    if os.getenv('GITHUB_ACTIONS') == 'true':
-        print("⚠️ GitHub Actions環境では技術的制約により杉並区サイトアクセスが困難です")
-        print("💡 代替実行環境については DEPLOYMENT_OPTIONS.md をご確認ください")
-        return False
-
+    # GitHub Actions対応のChrome設定
     options = Options()
     options.add_argument("--headless")
-    options.add_argument('--disable-dev-shm-usage')
     options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-features=VizDisplayCompositor")
+
+    # bot検知回避設定
+    options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-plugins")
+    options.add_argument("--disable-images")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+
+    # JavaScript有効のまま維持（操作に必要）
+    # options.add_argument("--disable-javascript")  # コメントアウト
+
+    # 最適化オプション
+    options.add_argument("--disable-background-networking")
+    options.add_argument("--disable-default-apps")
+    options.add_argument("--disable-sync")
+    options.add_argument("--disable-translate")
+    options.add_argument("--no-first-run")
+    options.add_argument("--mute-audio")
+
+    # ページロード戦略を調整
+    options.page_load_strategy = 'eager'  # noneではなくeagerを使用
 
     try:
         driver = webdriver.Chrome(options=options)
+
+        # bot検知回避: WebDriverプロパティを隠す
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
     except:
         from webdriver_manager.chrome import ChromeDriverManager
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 30)  # タイムアウトを延長
 
     try:
         all_availability = process_nishiogi(driver, wait) + process_sesion(driver, wait)
