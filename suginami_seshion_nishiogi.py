@@ -150,17 +150,20 @@ def process_nishiogi(driver, wait):
     """西荻地域区民センター・勤福会館の処理"""
     print("🏢 西荻地域区民センター・勤福会館 処理開始")
 
-    # アクセスにリトライ機能追加
+    # アクセスにリトライ機能追加（タイムアウト短縮）
     for attempt in range(3):
         try:
+            driver.set_page_load_timeout(30)  # 短いタイムアウト
             driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
-            time.sleep(3)  # ページロード待機
+            time.sleep(5)  # ページロード待機を延長
+            print(f"✅ ページアクセス成功（試行 {attempt + 1}）")
             break
         except Exception as e:
-            print(f"⚠️ ページアクセス試行 {attempt + 1}/3 失敗: {e}")
+            print(f"⚠️ ページアクセス試行 {attempt + 1}/3 失敗: {str(e)[:100]}")
             if attempt < 2:
-                time.sleep(2)
+                time.sleep(3)
             else:
+                print("❌ 全てのアクセス試行が失敗")
                 return []
 
     select_facility(driver, wait, "西荻地域区民センター・勤福会館")
@@ -186,7 +189,23 @@ def process_nishiogi(driver, wait):
 
 def process_sesion(driver, wait):
     """セシオン杉並の処理"""
-    driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+    print("🏢 セシオン杉並 処理開始")
+
+    # アクセスにリトライ機能追加
+    for attempt in range(3):
+        try:
+            driver.set_page_load_timeout(30)
+            driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+            time.sleep(5)
+            print(f"✅ ページアクセス成功（試行 {attempt + 1}）")
+            break
+        except Exception as e:
+            print(f"⚠️ ページアクセス試行 {attempt + 1}/3 失敗: {str(e)[:100]}")
+            if attempt < 2:
+                time.sleep(3)
+            else:
+                print("❌ 全てのアクセス試行が失敗")
+                return []
     select_facility(driver, wait, "セシオン杉並")
     setup_filters(driver, wait)
     click_display_and_wait(driver, wait)
@@ -224,8 +243,12 @@ def run():
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
 
-    # JavaScript有効のまま維持（操作に必要）
-    # options.add_argument("--disable-javascript")  # コメントアウト
+    # GitHub Actions環境での軽量化
+    if os.getenv('GITHUB_ACTIONS') == 'true':
+        print("🤖 GitHub Actions環境: JavaScript無効化モード")
+        options.add_argument("--disable-javascript")
+    else:
+        print("🖥️ ローカル環境: JavaScript有効モード")
 
     # 最適化オプション
     options.add_argument("--disable-background-networking")
@@ -236,7 +259,7 @@ def run():
     options.add_argument("--mute-audio")
 
     # ページロード戦略を調整
-    options.page_load_strategy = 'eager'  # noneではなくeagerを使用
+    options.page_load_strategy = 'none'  # 即座にレスポンス取得
 
     try:
         driver = webdriver.Chrome(options=options)
