@@ -109,11 +109,15 @@ def simple_test():
                     # ページロード戦略が'none'の場合、手動で待機
                     if options.page_load_strategy == 'none':
                         print("⏳ ページロード待機中...")
-                        time.sleep(5)  # 基本的な待機
+                        time.sleep(3)  # 基本的な待機を短縮
 
-                        # ページの状態確認
-                        ready_state = driver.execute_script("return document.readyState")
-                        print(f"📄 Document状態: {ready_state}")
+                        # JavaScript無効化時はスクリプト実行をスキップ
+                        try:
+                            ready_state = driver.execute_script("return document.readyState")
+                            print(f"📄 Document状態: {ready_state}")
+                        except Exception as script_e:
+                            print(f"⚠️ Script実行スキップ（JS無効）: {script_e}")
+                            print("📄 JavaScript無効のためreadyState確認なし")
 
                     print("✅ 杉並区サイト成功")
 
