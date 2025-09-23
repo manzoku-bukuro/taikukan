@@ -30,10 +30,28 @@ def simple_test():
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
 
+    # renderer timeout対策
+    options.add_argument("--disable-javascript")  # JavaScript無効化でbot検知回避
+    options.add_argument("--disable-web-security")
+    options.add_argument("--allow-running-insecure-content")
+    options.add_argument("--disable-background-networking")
+    options.add_argument("--disable-default-apps")
+    options.add_argument("--disable-sync")
+    options.add_argument("--disable-translate")
+    options.add_argument("--hide-scrollbars")
+    options.add_argument("--metrics-recording-only")
+    options.add_argument("--mute-audio")
+    options.add_argument("--no-first-run")
+    options.add_argument("--safebrowsing-disable-auto-update")
+    options.add_argument("--disable-ipc-flooding-protection")
+
     # 追加のプライバシー設定
     options.add_argument("--disable-background-timer-throttling")
     options.add_argument("--disable-backgrounding-occluded-windows")
     options.add_argument("--disable-renderer-backgrounding")
+
+    # ページロード戦略を変更
+    options.page_load_strategy = 'none'
 
     try:
         driver = webdriver.Chrome(options=options)
@@ -78,20 +96,38 @@ def simple_test():
                     driver.set_page_load_timeout(timeout_values[attempt])
 
                     # アクセス前にリファラー設定
-                    driver.execute_cdp_cmd('Network.setUserAgentOverride', {
-                        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                    })
+                    try:
+                        driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+                            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                        })
+                    except Exception as cdp_e:
+                        print(f"⚠️ CDP設定スキップ: {cdp_e}")
 
+                    print(f"🌐 アクセス中 (タイムアウト: {timeout_values[attempt]}秒)")
                     driver.get("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home")
+
+                    # ページロード戦略が'none'の場合、手動で待機
+                    if options.page_load_strategy == 'none':
+                        print("⏳ ページロード待機中...")
+                        time.sleep(5)  # 基本的な待機
+
+                        # ページの状態確認
+                        ready_state = driver.execute_script("return document.readyState")
+                        print(f"📄 Document状態: {ready_state}")
+
                     print("✅ 杉並区サイト成功")
 
                     # 基本情報取得
                     title = driver.title
                     print(f"📄 タイトル: {title}")
 
-                    # ページソース先頭100文字
-                    source = driver.page_source[:100]
+                    # ページソース先頭200文字（より詳細に）
+                    source = driver.page_source[:200]
                     print(f"📄 ソース先頭: {source}")
+
+                    # アクセス成功時の詳細情報
+                    current_url = driver.current_url
+                    print(f"📍 現在のURL: {current_url}")
 
                     success = True
                     break
