@@ -23,18 +23,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install selenium requests
         sudo apt-get update
-        sudo apt-get install -y xvfb
+        sudo apt-get install -y google-chrome-stable xvfb
+
+    - name: Setup Chrome and Virtual Display
+      run: |
+        export DISPLAY=:99
+        Xvfb :99 -ac -screen 0 1280x1024x24 &
+        sleep 2
 
     - name: Run Suginami facility monitor
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         DISPLAY: :99
-      timeout-minutes: 15
+      timeout-minutes: 20
       run: |
-        # 仮想ディスプレイを開始
-        export DISPLAY=:99
-        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-        sleep 3
         python suginami_seshion_nishiogi.py
 
     - name: Commit JSON updates if any
