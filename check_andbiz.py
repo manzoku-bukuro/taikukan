@@ -14,13 +14,6 @@ from selenium.webdriver.support import expected_conditions as EC
 # ChromeDriverを自動インストール
 chromedriver_autoinstaller.install()
 
-# 時間チェック: 22時から7時の間は実行しない
-now = datetime.now()
-current_hour = now.hour
-if 22 <= current_hour or current_hour < 7:
-    print(f"現在時刻 {now.strftime('%H:%M')} は実行対象外の時間帯です（22:00-07:00）")
-    exit(0)
-
 # WebDriverの設定
 options = Options()
 options.add_argument("--headless")
