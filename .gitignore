@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test and investigation files
+test_*.py
+investigate_*.py
+*_test.py
+
+# Screenshots and images
+*.png
+*.jpg
+*.jpeg
+
+# HTML dumps
+*_page.html
+*_source.html
+*.html
+
+# JSON data files (except specific ones we want to keep)
+*.json
+!package.json
+!tsconfig.json
+
+# Claude settings (local only)
+.claude/settings.local.json
+
+# Logs
+*.log
