@@ -178,13 +178,21 @@ try:
     # 「現在満枠となっております」チェック
     if "現在満枠となっております" in page_text:
         print("⚠ 現在満枠となっております")
-        # 満枠の場合でもIssueは更新（状態を記録）
-        dates_data = {
-            "status": "full",
-            "available_dates": [],
-            "checked_at": datetime.now().isoformat()
-        }
-        save_dates_to_issue(dates_data)
+
+        # 前回のデータを取得
+        previous_data = get_previous_dates_from_issue()
+
+        # 前回が空きありだった場合のみ更新（満枠に変化）
+        if previous_data is None or previous_data.get("status") == "available":
+            print("\n✓ 状態変化を検知: Issueを更新します")
+            dates_data = {
+                "status": "full",
+                "available_dates": [],
+                "checked_at": datetime.now().isoformat()
+            }
+            save_dates_to_issue(dates_data)
+        else:
+            print("\n➡ 満枠状態に変更なし: Issue更新をスキップします")
     else:
         print("✓ 現在満枠ではありません\n")
 
@@ -233,8 +241,11 @@ try:
             else:
                 print("\n➡ 日程に変更はありません")
 
-        # Issueを更新
-        save_dates_to_issue(current_data)
+        # 変更があった場合のみIssueを更新
+        if has_changes:
+            save_dates_to_issue(current_data)
+        else:
+            print("\n➡ 変更がないためIssue更新はスキップします")
 
         # 変更があった場合のみSlack通知
         if has_changes and available_dates:
