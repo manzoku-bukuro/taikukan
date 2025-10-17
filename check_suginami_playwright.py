@@ -130,14 +130,36 @@ def save_data_to_issue(data):
     return False
 
 def check_availability_with_playwright():
-    """Playwrightで空き状況をチェック"""
+    """Playwrightで空き状況をチェック（リトライ機能付き）"""
     print("=== Playwright で杉並区施設予約をチェック ===\n")
+
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            return _try_check_availability(attempt + 1)
+        except Exception as e:
+            if attempt < max_retries - 1:
+                wait_time = (attempt + 1) * 10
+                print(f"⚠ 試行 {attempt + 1}/{max_retries} 失敗: {str(e)[:100]}")
+                print(f"  {wait_time}秒後に再試行...")
+                import time
+                time.sleep(wait_time)
+            else:
+                print(f"❌ 全ての試行が失敗しました")
+                return None
+
+def _try_check_availability(attempt_num):
+    """実際のチェック処理"""
+    print(f"[試行 {attempt_num}]")
 
     with sync_playwright() as p:
         # ブラウザ起動（headlessモード）
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(
-            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            viewport={"width": 1920, "height": 1080},
+            locale="ja-JP",
+            timezone_id="Asia/Tokyo"
         )
         page = context.new_page()
 
@@ -145,7 +167,8 @@ def check_availability_with_playwright():
             # ホームページにアクセス
             print("サイトにアクセス中...")
             page.goto("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home",
-                     wait_until="networkidle", timeout=30000)
+                     wait_until="domcontentloaded", timeout=60000)
+            page.wait_for_timeout(3000)  # JavaScript実行を待つ
             print(f"✓ ページタイトル: {page.title()}")
 
             # 集会施設ボタンをクリック
@@ -160,7 +183,7 @@ def check_availability_with_playwright():
 
             # 次へボタン
             page.click("button[aria-label='次へ進む']")
-            page.wait_for_selector("h2:text('施設別空き状況')", timeout=10000)
+            page.wait_for_selector("h2:text('施設別空き状況')", timeout=30000)
             print("✓ 施設別空き状況ページに遷移")
 
             # フィルター設定
@@ -226,7 +249,7 @@ def check_availability_with_playwright():
 
             # 次へ
             page.click("button[aria-label='次へ進む']")
-            page.wait_for_selector("h2:text('時間帯別空き状況')", timeout=10000)
+            page.wait_for_selector("h2:text('時間帯別空き状況')", timeout=30000)
             print("✓ 時間帯別空き状況ページに遷移")
 
             # 空き情報を取得
