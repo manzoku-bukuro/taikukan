@@ -1,0 +1,40 @@
+name: check_chuo
+
+on:
+  workflow_dispatch:  # 手動トリガー
+
+jobs:
+  check-chuo:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install Chrome
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium chromedriver-autoinstaller
+
+    - name: Run check_chuo script
+      id: check-chuo
+      run: |
+        python check_chuo.py
+
+    - name: Upload screenshot
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: chuo-screenshot
+        path: chuo_screenshot.png
+        if-no-files-found: ignore
