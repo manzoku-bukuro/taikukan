@@ -37,6 +37,7 @@ investigate_*.py
 *.json
 !package.json
 !tsconfig.json
+!suginami_availability.json
 
 # Claude settings (local only)
 .claude/settings.local.json

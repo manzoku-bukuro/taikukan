@@ -1,60 +1,113 @@
-# 杉並区体育施設空き状況監視スクリプト
+# 杉並区施設予約チェック
 
 ## 概要
-杉並区の西荻地域区民センター・勤福会館とセシオン杉並の体育室空き状況を監視し、新しい空きが見つかった場合にSlack通知を送信するスクリプトです。
 
-## 対象施設・時間
-- **西荻地域区民センター・勤福会館**: 体育室半面Ａ・Ｂ
-- **セシオン杉並**: 体育室全面
-- **対象日時**: 土曜日・日曜日・祝日のみ
+杉並区施設予約システムの空き状況をチェックして通知するシステムです。
 
-## 機能
-- 新しい空きスロットの検出
-- JSONファイルでのデータ永続化
-- Slack通知（新スロット発見時）
-- 差分検出（新規追加のみ通知、削除は無視）
+## アーキテクチャ
 
-## 必要な環境
-- Python 3.7+
-- Google Chrome
-- ChromeDriver（webdriver_managerで自動インストール）
+GitHub Actionsから直接アクセスできない問題に対応するため、**ハイブリッドアプローチ**を採用しています。
 
-## インストール
+### 1. ローカル実行（データ取得）
+
 ```bash
-pip install selenium requests webdriver-manager
+python check_suginami_local.py
 ```
 
-## 環境変数
+- Seleniumで実際に杉並区サイトにアクセス
+- 空き状況を取得
+- `suginami_availability.json` に結果を保存
+- 変更があった場合、Gitコミットを促す
+
+### 2. GitHub Actions（通知）
+
+`suginami_availability.json` がコミットされたら自動実行：
+
+- 前回のデータ（GitHub Issue #2）と比較
+- 変更があった場合のみ：
+  - Issue #2 を更新
+  - Slack通知を送信
+
+## セットアップ
+
+### 必要な環境変数
+
+GitHub Secretsに以下を設定：
+
+- `SLACK_WEBHOOK_URL`: Slack通知用Webhook URL
+- `GITHUB_TOKEN`: 自動的に提供される（設定不要）
+
+### ローカル実行の準備
+
 ```bash
-export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+# 依存関係をインストール
+pip install selenium chromedriver-autoinstaller
+
+# ヘッドレスモードで実行（デフォルト）
+python check_suginami_local.py
+
+# ブラウザを表示して実行
+HEADLESS=false python check_suginami_local.py
 ```
 
-## 実行方法
+## ワークフロー
 
-### 単発実行
+### 定期チェック（手動実行）
+
+1. ローカルで `check_suginami_local.py` を実行
+2. 変更があれば `suginami_availability.json` が更新される
+3. Gitにコミット＆プッシュ
+4. GitHub Actionsが自動的に起動
+5. 変更を検知してSlack通知
+
+### Gitコミット例
+
 ```bash
-python suginami_seshion_nishiogi.py
+git add suginami_availability.json
+git commit -m "Update suginami availability - $(date '+%Y-%m-%d %H:%M')"
+git push origin master
 ```
 
-### 定期実行（推奨）
-crontabで30分毎に実行:
-```bash
-# crontab -e で以下を追加
-*/30 7-23 * * * cd /path/to/taikukan && python suginami_seshion_nishiogi.py
+## なぜこのアプローチ？
+
+### 問題点
+
+- 杉並区サイトがGitHub ActionsのIPレンジをブロックしている可能性
+- Seleniumでの自動アクセスが失敗する
+
+### 解決策
+
+- **ローカル**: IPブロックされないため、正常にアクセス可能
+- **GitHub Actions**: JSONファイルの変更監視と通知のみに特化
+- **メリット**: シンプルで確実、失敗しない
+
+## ファイル構成
+
 ```
-
-## 出力ファイル
-- `suginami_availability.json`: 空き状況データ（自動生成）
-
-## GitHub Actions制限
-GitHub Actions環境では杉並区サイトへのアクセスでタイムアウトが発生するため、ローカル環境またはVPSでの実行を推奨します。
-
-## 代替実行環境
-1. **ローカルマシン**: 最も確実
-2. **VPS**: クラウドサーバーでの定期実行
-3. **Raspberry Pi**: 自宅サーバーでの24時間監視
+check_suginami_local.py      # ローカル実行用（データ取得）
+notify_suginami_changes.py   # GitHub Actions用（通知）
+suginami_availability.json   # 空き状況データ
+.github/workflows/suginami_notify.yml  # GitHub Actionsワークフロー
+```
 
 ## トラブルシューティング
-- ChromeDriverのバージョン不整合: webdriver_managerが自動解決
-- サイトアクセスエラー: ネットワーク環境を確認
-- Slack通知が届かない: SLACK_WEBHOOK_URL環境変数を確認
+
+### ローカルでアクセスできない
+
+```bash
+# ヘッドレスモードを無効化してデバッグ
+HEADLESS=false python check_suginami_local.py
+```
+
+### GitHub Actionsが動かない
+
+- `suginami_availability.json` がコミットされているか確認
+- GitHub Secretsが設定されているか確認
+- ワークフローのログを確認
+
+## 今後の拡張
+
+- [ ] 実際の空き枠取得機能を実装
+- [ ] 複数施設のサポート
+- [ ] 特定の日時の空き状況フィルタリング
+- [ ] cronで定期的にローカル実行を促すリマインダー

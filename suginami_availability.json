@@ -1,0 +1,22 @@
+{
+  "checked_at": "2025-10-18T01:13:01.104422",
+  "environment": "local",
+  "facilities": [
+    {
+      "facility": "西荻地域区民センター",
+      "status": "accessible",
+      "checked_at": "2025-10-18T01:12:57.824404",
+      "url": "https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home",
+      "title": "Home - 杉並区 公共施設予約システム",
+      "slots": []
+    },
+    {
+      "facility": "セシオン杉並",
+      "status": "accessible",
+      "checked_at": "2025-10-18T01:13:01.097530",
+      "url": "https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home",
+      "title": "Home - 杉並区 公共施設予約システム",
+      "slots": []
+    }
+  ]
+}
