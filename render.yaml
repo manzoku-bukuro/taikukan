@@ -1,0 +1,11 @@
+services:
+  - type: cron
+    name: suginami-checker
+    env: docker
+    schedule: "*/30 7-23 * * *"
+    dockerfilePath: ./Dockerfile.render
+    envVars:
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
