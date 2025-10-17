@@ -168,13 +168,18 @@ def _try_check_availability(attempt_num):
             print("サイトにアクセス中...")
             page.goto("https://www.shisetsuyoyaku.city.suginami.tokyo.jp/user/Home",
                      wait_until="domcontentloaded", timeout=60000)
-            page.wait_for_timeout(3000)  # JavaScript実行を待つ
+
+            # Vueアプリが読み込まれるまで待つ（集会施設ボタンが表示されるまで）
+            print("Vueアプリの初期化を待機中...")
+            page.wait_for_selector("button:text('集会施設')", timeout=30000, state="visible")
             print(f"✓ ページタイトル: {page.title()}")
 
             # 集会施設ボタンをクリック
             print("集会施設を選択中...")
             page.click("button:text('集会施設')")
-            page.wait_for_timeout(1000)
+
+            # 施設選択画面が表示されるまで待つ
+            page.wait_for_selector("label:has-text('西荻地域区民センター・勤福会館')", timeout=15000, state="visible")
 
             # 西荻地域区民センターを選択
             print("西荻地域区民センターを選択中...")
@@ -188,6 +193,9 @@ def _try_check_availability(attempt_num):
 
             # フィルター設定
             print("フィルター設定中...")
+
+            # フィルター要素が表示されるまで待つ（Vueルーティング遷移）
+            page.wait_for_timeout(2000)  # Vueのマウント待ち
 
             # JavaScriptで直接操作
             page.evaluate("""
