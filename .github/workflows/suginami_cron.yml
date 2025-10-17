@@ -1,0 +1,37 @@
+name: Suginami Availability Check (Cron)
+
+on:
+  schedule:
+    # JST 7:00-23:30 = UTC 22:00(前日)-14:30
+    # 30分ごとに実行
+    - cron: '*/30 22-23 * * *'  # UTC 22:00-23:30 (JST 翌7:00-8:30)
+    - cron: '*/30 0-14 * * *'   # UTC 0:00-14:30 (JST 9:00-23:30)
+  workflow_dispatch:  # 手動トリガーも可能
+
+jobs:
+  check-availability:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests beautifulsoup4
+
+    - name: Check availability
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        python check_suginami_lightweight.py
