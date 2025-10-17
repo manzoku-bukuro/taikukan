@@ -20,6 +20,7 @@ Thumbs.db
 
 # Test and investigation files
 test_*.py
+!test_suginami_access.py
 investigate_*.py
 *_test.py
 
