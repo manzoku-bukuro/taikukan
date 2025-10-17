@@ -27,11 +27,13 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests beautifulsoup4
+        pip install requests playwright
+        playwright install chromium
+        playwright install-deps
 
     - name: Check availability
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        python check_suginami_lightweight.py
+        python check_suginami_playwright.py
